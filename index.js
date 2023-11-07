@@ -29,15 +29,24 @@ async function run() {
 
         const swapsCollection = client.db('swapDB').collection('swaps');
 
+
+
+        // Swap Related API
         app.get('/api/v1/swaps', async (req, res) => {
 
             let query = {}
 
             const user = req.query.user;
+            const swap = req.query.swap;
 
             if (user) {
                 query.userEmail = user
             }
+            if (swap) {
+                query._id = new ObjectId(swap)
+            }
+
+            console.log(query);
 
             const result = await swapsCollection.find(query).toArray();
             res.send(result);
@@ -46,6 +55,28 @@ async function run() {
         app.post('/api/v1/user/add-swap', async (req, res) => {
             const swap = req.body;
             const result = await swapsCollection.insertOne(swap)
+            res.send(result)
+        })
+
+        app.put('/api/v1/user/update-swap/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) }
+            const options = { upsert: true };
+            const updatedSwap = req.body;
+
+            const swap = {
+                $set: {
+                    name: updatedSwap.name,
+                    image: updatedSwap.image,
+                    userName: updatedSwap.userName,
+                    userEmail: updatedSwap.userEmail,
+                    swapLocation: updatedSwap.swapLocation,
+                    price: updatedSwap.price,
+                    description: updatedSwap.description,
+                }
+            }
+
+            const result = await swapsCollection.updateOne(filter, swap, options)
             res.send(result)
         })
 
