@@ -30,7 +30,16 @@ async function run() {
         const swapsCollection = client.db('swapDB').collection('swaps');
 
         app.get('/api/v1/swaps', async (req, res) => {
-            const result = await swapsCollection.find().toArray();
+
+            let query = {}
+
+            const user = req.query.user;
+
+            if (user) {
+                query.userEmail = user
+            }
+
+            const result = await swapsCollection.find(query).toArray();
             res.send(result);
         })
 
