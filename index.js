@@ -1,5 +1,5 @@
 const express = require('express');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const cors = require('cors');
 require('dotenv').config();
 const app = express();
@@ -48,6 +48,14 @@ async function run() {
             const result = await swapsCollection.insertOne(swap)
             res.send(result)
         })
+
+        app.delete('/api/v1/user/delete-swap/:swapId', async (req, res) => {
+            const id = req.params.swapId;
+            const query = { _id: new ObjectId(id) }
+            const result = await swapsCollection.deleteOne(query)
+            res.send(result)
+        })
+
 
 
         // Send a ping to confirm a successful connection
