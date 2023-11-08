@@ -10,7 +10,7 @@ const port = process.env.PORT || 5000;
 // MiddleWare
 
 app.use(cors({
-    origin: ['http://localhost:5173'],
+    origin: ['http://localhost:5173', 'https://swap-gardens-server.vercel.app'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
 }));
@@ -71,7 +71,8 @@ async function run() {
 
             res.cookie('token', token, {
                 httpOnly: true,
-                secure: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
             })
                 .send({ success: true })
         })
