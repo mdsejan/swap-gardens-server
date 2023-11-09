@@ -174,7 +174,7 @@ async function run() {
                 query.userEmail = user
             }
 
-            const result = await bookingCollection.find().toArray();
+            const result = await bookingCollection.find(query).toArray();
             res.send(result);
         })
 
