@@ -10,13 +10,34 @@ const port = process.env.PORT || 5000;
 // MiddleWare
 
 app.use(cors({
-    origin: ['http://localhost:5173', 'https://swap-gardens-server.vercel.app'],
+    origin: ['http://localhost:5173', 'https://swap-gardens-server.vercel.app', 'https://swapgardens.netlify.app'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
 }));
 
 app.use(express.json());
 app.use(cookieParser());
+
+// MiddleWare
+// verify token
+const verifyToken = async (req, res, next) => {
+    const token = req.cookies?.token;
+    if (!token) {
+        return res.status(401).send({ message: 'not authorized' })
+    }
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        //error
+        if (err) {
+            return res.status(401).send({ message: 'unauthorized' })
+        }
+        //if valid token
+
+        req.user = decoded;
+
+        next()
+    })
+
+}
 
 
 
@@ -38,30 +59,7 @@ async function run() {
         // await client.connect();
 
         const swapsCollection = client.db('swapDB').collection('swaps');
-
-        // MiddleWare
-        // verify token
-        const verifyToken = async (req, res, next) => {
-            const token = req.cookies?.token;
-
-            if (!token) {
-                return res.status(401).send({ message: 'not authorized' })
-            }
-            jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-                //error
-                if (err) {
-                    return res.status(401).send({ message: 'unauthorized' })
-                }
-                //if valid token
-
-
-                req.user = decoded;
-
-                next()
-            })
-
-        }
-
+        const bookingCollection = client.db('swapDB').collection('booking');
 
 
         //auth related API
@@ -90,6 +88,7 @@ async function run() {
 
             const swap = req.query.swap;
             const search = req.query.search;
+            const user = req.query.user;
 
             let query = {}
 
@@ -99,6 +98,10 @@ async function run() {
 
             if (search) {
                 query.name = search
+            }
+
+            if (user) {
+                query.providerEmail = user
             }
 
             const result = await swapsCollection.find(query).toArray();
@@ -116,7 +119,7 @@ async function run() {
             let query = {}
 
             if (userMail) {
-                query.userEmail = userMail
+                query.providerEmail = userMail
             }
 
             const result = await swapsCollection.find(query).toArray();
@@ -155,6 +158,15 @@ async function run() {
             const id = req.params.swapId;
             const query = { _id: new ObjectId(id) }
             const result = await swapsCollection.deleteOne(query)
+            res.send(result)
+        })
+
+
+        //Booking related API
+
+        app.post('/api/v1/user/booking', async (req, res) => {
+            const swap = req.body;
+            const result = await bookingCollection.insertOne(swap)
             res.send(result)
         })
 
