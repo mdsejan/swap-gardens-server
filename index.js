@@ -164,6 +164,21 @@ async function run() {
 
         //Booking related API
 
+        app.get('/api/v1/bookings', async (req, res) => {
+
+            const user = req.query.user;
+
+            let query = {}
+
+            if (user) {
+                query.userEmail = user
+            }
+
+            const result = await bookingCollection.find().toArray();
+            res.send(result);
+        })
+
+
         app.post('/api/v1/user/booking', async (req, res) => {
             const swap = req.body;
             const result = await bookingCollection.insertOne(swap)
